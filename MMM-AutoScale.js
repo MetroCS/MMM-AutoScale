@@ -28,7 +28,10 @@ Module.register("MMM-AutoScale", {
 	defaults: {
 		// CSS-pixel dimensions for which the MagicMirror layout was designed.
 		designWidth: 1920,
-		designHeight: 1080,
+	        designHeight: 1080,
+
+	        // Buffer space in pixels around all four edges
+	        margin: 0,
 
 		// "contain" preserves the entire layout and may leave unused space.
 		// "cover" fills the viewport and may crop the layout.
@@ -109,6 +112,21 @@ Module.register("MMM-AutoScale", {
 		);
 	},
 
+    getScaleFactor: function () {
+	const margin = this.config.margin || 0;
+
+	// Calculate available dimensions after subtracting margin on both sides
+	const availableWidth = Math.max(0, window.innerWidth - margin * 2);
+	const availableHeight = Math.max(0, window.innerHeight - margin * 2);
+
+	// Compute scale ratios
+	const scaleX = availableWidth / this.config.targetWidth;
+	const scaleY = availableHeight / this.config.targetHeight;
+
+	// Use the smaller scale factor to ensure the layout fits entirely within the window
+	return Math.min(scaleX, scaleY);
+    },
+
 	applyScale() {
 		const designWidth = Number(this.config.designWidth);
 		const designHeight = Number(this.config.designHeight);
@@ -120,11 +138,23 @@ Module.register("MMM-AutoScale", {
 			return;
 		}
 
-		const viewport = this.getViewportSize();
+		const rawViewport = this.getViewportSize();
 
-		if (!(viewport.width > 0) || !(viewport.height > 0)) {
+		if (!(rawViewport.width > 0) || !(rawViewport.height > 0)) {
 			return;
 		}
+
+	        // Parse margin config (defaults to 0 if not provided or invalid)
+		const configuredMargin = Number(this.config.margin);
+		const margin = Number.isFinite(configuredMargin) && configuredMargin >= 0
+			? configuredMargin
+			: 0;
+
+		// Calculate effective viewport dimensions reduced by double the margin
+		const viewport = {
+			width: Math.max(0, rawViewport.width - margin * 2),
+			height: Math.max(0, rawViewport.height - margin * 2)
+		};
 
 		if (!this.originalStyles) {
 			this.captureOriginalStyles();
@@ -180,8 +210,8 @@ Module.register("MMM-AutoScale", {
 			0.5
 		);
 
-		const left = (viewport.width - scaledWidth) * alignX;
-		const top = (viewport.height - scaledHeight) * alignY;
+		const left = margin + (viewport.width - scaledWidth) * alignX;
+		const top = margin + (viewport.height - scaledHeight) * alignY;
 
 		const html = document.documentElement;
 		const body = document.body;
@@ -208,9 +238,11 @@ Module.register("MMM-AutoScale", {
 
 		if (this.config.debug) {
 			Log.info(
-				`MMM-AutoScale: viewport=${viewport.width}x${viewport.height}, ` +
-				`design=${designWidth}x${designHeight}, scale=${scale.toFixed(4)}, ` +
-				`offset=${left.toFixed(1)},${top.toFixed(1)}, mode=${this.config.mode}`
+			        `MMM-AutoScale: rawViewport=${rawViewport.width}x${rawViewport.height}, ` +
+				`effectiveViewport=${viewport.width}x${viewport.height}, ` +
+				`margin=${margin}px, design=${designWidth}x${designHeight}, ` +
+				`scale=${scale.toFixed(4)}, offset=${left.toFixed(1)},${top.toFixed(1)}, ` +
+				`mode=${this.config.mode}`
 			);
 		}
 	},

@@ -109,6 +109,8 @@ viewport horizontally.
 		alignX: "center",
 		alignY: "center",
 
+		margin: 0,
+
 		allowUpscale: true,
 		allowDownscale: true,
 		minScale: 0,
@@ -130,6 +132,7 @@ viewport horizontally.
 | `mode` | `"contain"` | `"contain"`, `"cover"`, `"width"`, or `"height"` |
 | `alignX` | `"center"` | `"left"`, `"center"`, `"right"`, or a number from `0` to `1` |
 | `alignY` | `"center"` | `"top"`, `"center"`, `"bottom"`, or a number from `0` to `1` |
+| `margin` | `0` | Size of a border around the displayed canvas in CSS pixels |
 | `allowUpscale` | `true` | Permit enlargement above the original design size |
 | `allowDownscale` | `true` | Permit reduction below the original design size |
 | `minScale` | `0` | Smallest permitted scale factor |
@@ -171,6 +174,22 @@ alignY: 0.75
 		mode: "cover",
 		alignX: "center",
 		alignY: "center"
+	}
+},
+```
+
+### Example: add a border for better viewing in a web browser window
+
+```js
+{
+	module: "MMM-AutoScale",
+	config: {
+		designWidth: 1920,
+		designHeight: 1080,
+		mode: "contain",
+		alignX: "center",
+		alignY: "center",
+		margin: 10
 	}
 },
 ```
